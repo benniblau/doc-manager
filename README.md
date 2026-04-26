@@ -17,16 +17,18 @@ Five LangGraph agents run in sequence:
 Output structure:
 ```
 output/
-├── _index.md               ← master index of all documents
-├── purpura/
+├── _index.md                    ← master index of all documents
+├── acme_gmbh/
 │   ├── rechnung/
-│   │   ├── rechnung_4684.pdf
-│   │   └── rechnung_4684.md
+│   │   ├── rechnung_1001.pdf
+│   │   └── rechnung_1001.md
 │   └── schlussrechnung/
-│       └── ...
-└── ofa_geruest/
+│       ├── schlussrechnung_final.pdf
+│       └── schlussrechnung_final.md
+└── musterfirma_ag/
     └── bericht/
-        └── ...
+        ├── bericht_2024.pdf
+        └── bericht_2024.md
 ```
 
 ## Requirements
