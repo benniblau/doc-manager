@@ -10,9 +10,30 @@ from doc_manager.tools.file_ops import copy_file, ensure_dir, move_file, sanitiz
 console = Console()
 
 
-def _dest_path(output_folder: str, subfolder: str, original_path: str, ext: str) -> str:
-    stem = sanitize_filename(os.path.splitext(os.path.basename(original_path))[0])
-    return os.path.join(output_folder, subfolder, f"{stem}{ext}")
+def _build_stem(doc: DocumentMetadata) -> str | None:
+    """Build a filename stem from document metadata: <Date>_<Type>_<Sender>.
+    Returns None if any field is missing — caller should fall back to original filename."""
+    if not doc.date or not doc.doc_type or not doc.sender:
+        return None
+    return f"{sanitize_filename(doc.date)}_{sanitize_filename(doc.doc_type)}_{sanitize_filename(doc.sender)}"
+
+
+def _dest_path(output_folder: str, subfolder: str, doc: DocumentMetadata, ext: str) -> str:
+    stem = _build_stem(doc) or sanitize_filename(os.path.splitext(os.path.basename(doc.file_path))[0])
+    base = os.path.join(output_folder, subfolder, f"{stem}{ext}")
+    # Avoid overwriting an existing file with a different source
+    if not os.path.exists(base):
+        return base
+    original_stem = sanitize_filename(os.path.splitext(os.path.basename(doc.file_path))[0])
+    candidate = os.path.join(output_folder, subfolder, f"{stem}_{original_stem}{ext}")
+    if not os.path.exists(candidate):
+        return candidate
+    counter = 2
+    while True:
+        candidate = os.path.join(output_folder, subfolder, f"{stem}_{counter}{ext}")
+        if not os.path.exists(candidate):
+            return candidate
+        counter += 1
 
 
 def _build_index(documents: list[DocumentMetadata], source_folder: str, today: str) -> str:
@@ -53,8 +74,8 @@ def organizer_node(state: GraphState) -> dict:
         table.add_column("Destination")
         for doc in documents:
             subfolder = doc.target_subfolder or "unknown"
-            pdf_dest = _dest_path(output_folder, subfolder, doc.file_path, ".pdf")
-            md_dest = _dest_path(output_folder, subfolder, doc.file_path, ".md")
+            pdf_dest = _dest_path(output_folder, subfolder, doc, ".pdf")
+            md_dest = _dest_path(output_folder, subfolder, doc, ".md")
             action = "COPY" if copy_mode else "MOVE"
             table.add_row(action, doc.file_path, pdf_dest)
             if doc.markdown_path:
@@ -68,8 +89,8 @@ def organizer_node(state: GraphState) -> dict:
 
     for doc in documents:
         subfolder = doc.target_subfolder or "unknown"
-        pdf_dest = _dest_path(output_folder, subfolder, doc.file_path, ".pdf")
-        md_dest = _dest_path(output_folder, subfolder, doc.file_path, ".md")
+        pdf_dest = _dest_path(output_folder, subfolder, doc, ".pdf")
+        md_dest = _dest_path(output_folder, subfolder, doc, ".md")
 
         try:
             transfer(doc.file_path, pdf_dest)
