@@ -31,8 +31,12 @@ class GraphState(TypedDict):
     dry_run: bool
     copy_mode: bool
     verbose: bool
+    recursive: bool
+    max_agents: int
     # Each node replaces the full list; errors accumulate across nodes
     documents: list[DocumentMetadata]
+    # Accumulator for parallel analyst sub-agents; merged into documents by collector
+    analysed_docs: Annotated[list[DocumentMetadata], operator.add]
     taxonomy: Optional[dict[str, str]]
     errors: Annotated[list[str], operator.add]
     current_phase: str

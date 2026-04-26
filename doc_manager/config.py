@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     MAX_TEXT_CHARS: int = 32000
     TEMPERATURE: float = 0.1
     REQUEST_TIMEOUT: int = 120
+    MAX_AGENTS: int = 4
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

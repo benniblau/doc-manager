@@ -40,7 +40,9 @@ def _ping_llm(model_url: str, model_name: str, timeout: int) -> None:
               help="LLM model name (overrides .env)")
 @click.option("--verbose", "-v", is_flag=True, default=False,
               help="Show LLM responses and debug info")
-def main(source_folder, output, dry_run, copy, model_url, model_name, verbose):
+@click.option("--recursive", "-r", is_flag=True, default=False,
+              help="Scan all subfolders of the source folder")
+def main(source_folder, output, dry_run, copy, model_url, model_name, verbose, recursive):
     """Organize PDF documents using a local LLM multi-agent pipeline."""
     from dotenv import load_dotenv
     load_dotenv()
@@ -61,6 +63,8 @@ def main(source_folder, output, dry_run, copy, model_url, model_name, verbose):
     console.print(f"  Output : {output_folder}")
     console.print(f"  Model  : {settings.MODEL_NAME} @ {settings.MODEL_URL}")
     console.print(f"  Mode   : {'dry-run' if dry_run else 'copy' if copy else 'move'}")
+    console.print(f"  Scan   : {'recursive' if recursive else 'top-level only'}")
+    console.print(f"  Agents : {settings.MAX_AGENTS} parallel")
     console.print()
 
     console.print("[dim]Checking LLM connection...[/]")
@@ -76,7 +80,10 @@ def main(source_folder, output, dry_run, copy, model_url, model_name, verbose):
         "dry_run": dry_run,
         "copy_mode": copy,
         "verbose": verbose,
+        "recursive": recursive,
+        "max_agents": settings.MAX_AGENTS,
         "documents": [],
+        "analysed_docs": [],
         "taxonomy": None,
         "errors": [],
         "current_phase": "scan",
