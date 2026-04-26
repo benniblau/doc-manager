@@ -1,19 +1,18 @@
 # Organizer Agent
 
 ## Role
-Moves or copies all PDF and markdown files into the new subfolder structure under the output folder.
+Copies all PDF and markdown files into the new subfolder structure under the output folder. Source files are never modified.
 
 ## Responsibilities
 - Create all required subdirectories under `output_folder`
-- Move or copy each PDF to `output_folder/{target_subfolder}/{sanitized_name}.pdf`
-- Move or copy each `.md` file to the same subfolder
+- Copy each PDF to `output_folder/{target_subfolder}/{stem}.pdf`
+- Copy each `.md` file to the same subfolder
 - Generate `_index.md` in `output_folder` summarizing all documents
 - In `dry_run` mode: print a rich table of planned operations without touching any files
 
 ## Inputs
 - `output_folder: str`
 - `dry_run: bool`
-- `copy_mode: bool`
 - All `DocumentMetadata` with `file_path`, `target_subfolder`, `markdown_path` populated
 
 ## Outputs

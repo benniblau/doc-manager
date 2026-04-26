@@ -29,7 +29,6 @@ class GraphState(TypedDict):
     source_folder: str
     output_folder: str
     dry_run: bool
-    copy_mode: bool
     verbose: bool
     recursive: bool
     max_agents: int

@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from doc_manager.state import DocumentMetadata, GraphState
-from doc_manager.tools.file_ops import copy_file, ensure_dir, move_file, sanitize_filename, write_text
+from doc_manager.tools.file_ops import copy_file, ensure_dir, sanitize_filename, write_text
 
 console = Console()
 
@@ -63,7 +63,6 @@ def _build_index(documents: list[DocumentMetadata], source_folder: str, today: s
 def organizer_node(state: GraphState) -> dict:
     output_folder = state["output_folder"]
     dry_run = state["dry_run"]
-    copy_mode = state["copy_mode"]
     documents = state["documents"]
     today = date.today().isoformat()
 
@@ -76,15 +75,13 @@ def organizer_node(state: GraphState) -> dict:
             subfolder = doc.target_subfolder or "unknown"
             pdf_dest = _dest_path(output_folder, subfolder, doc, ".pdf")
             md_dest = _dest_path(output_folder, subfolder, doc, ".md")
-            action = "COPY" if copy_mode else "MOVE"
-            table.add_row(action, doc.file_path, pdf_dest)
+            table.add_row("COPY", doc.file_path, pdf_dest)
             if doc.markdown_path:
-                table.add_row(action, doc.markdown_path, md_dest)
+                table.add_row("COPY", doc.markdown_path, md_dest)
         console.print(table)
         return {"documents": documents, "current_phase": "done"}
 
     ensure_dir(output_folder)
-    transfer = copy_file if copy_mode else move_file
     updated_docs = []
 
     for doc in documents:
@@ -93,9 +90,9 @@ def organizer_node(state: GraphState) -> dict:
         md_dest = _dest_path(output_folder, subfolder, doc, ".md")
 
         try:
-            transfer(doc.file_path, pdf_dest)
+            copy_file(doc.file_path, pdf_dest)
         except Exception as e:
-            console.print(f"[red]Failed to transfer {doc.file_path}: {e}[/]")
+            console.print(f"[red]Failed to copy {doc.file_path}: {e}[/]")
             pdf_dest = doc.file_path
 
         if doc.markdown_path and os.path.exists(doc.markdown_path):

@@ -28,12 +28,10 @@ def _ping_llm(model_url: str, model_name: str, timeout: int) -> None:
 
 @click.command()
 @click.argument("source_folder", type=click.Path(exists=True, file_okay=False, resolve_path=True))
-@click.option("--output", "-o", default=None,
-              help="Output folder. Defaults to <source_folder>/_organized")
+@click.option("--output", "-o", required=True,
+              help="Output folder where the organised structure will be created")
 @click.option("--dry-run", is_flag=True, default=False,
-              help="Preview planned file operations without moving anything")
-@click.option("--copy", is_flag=True, default=False,
-              help="Copy files instead of moving them")
+              help="Preview planned file operations without copying anything")
 @click.option("--model-url", envvar="MODEL_URL", default=None,
               help="LLM API base URL (overrides .env)")
 @click.option("--model-name", envvar="MODEL_NAME", default=None,
@@ -42,7 +40,7 @@ def _ping_llm(model_url: str, model_name: str, timeout: int) -> None:
               help="Show LLM responses and debug info")
 @click.option("--recursive", "-r", is_flag=True, default=False,
               help="Scan all subfolders of the source folder")
-def main(source_folder, output, dry_run, copy, model_url, model_name, verbose, recursive):
+def main(source_folder, output, dry_run, model_url, model_name, verbose, recursive):
     """Organize PDF documents using a local LLM multi-agent pipeline."""
     from dotenv import load_dotenv
     load_dotenv()
@@ -56,13 +54,13 @@ def main(source_folder, output, dry_run, copy, model_url, model_name, verbose, r
     # Import settings after env is set
     from doc_manager.config import settings
 
-    output_folder = output or os.path.join(source_folder, "_organized")
+    output_folder = os.path.realpath(output)
 
     console.print(f"[bold]Document Manager[/]")
     console.print(f"  Source : {source_folder}")
     console.print(f"  Output : {output_folder}")
     console.print(f"  Model  : {settings.MODEL_NAME} @ {settings.MODEL_URL}")
-    console.print(f"  Mode   : {'dry-run' if dry_run else 'copy' if copy else 'move'}")
+    console.print(f"  Mode   : {'dry-run' if dry_run else 'copy'}")
     console.print(f"  Scan   : {'recursive' if recursive else 'top-level only'}")
     console.print(f"  Agents : {settings.MAX_AGENTS} parallel")
     console.print()
@@ -78,7 +76,6 @@ def main(source_folder, output, dry_run, copy, model_url, model_name, verbose, r
         "source_folder": source_folder,
         "output_folder": output_folder,
         "dry_run": dry_run,
-        "copy_mode": copy,
         "verbose": verbose,
         "recursive": recursive,
         "max_agents": settings.MAX_AGENTS,
@@ -127,7 +124,7 @@ def main(source_folder, output, dry_run, copy, model_url, model_name, verbose, r
     readable = sum(1 for d in documents if d.is_readable)
     console.print(f"\n[bold]Done.[/] {total} documents processed ({readable} readable, {total - readable} unreadable).")
     if not dry_run:
-        console.print(f"Output: {output_folder}")
+        console.print(f"Files copied to: {output_folder}")
 
 
 if __name__ == "__main__":

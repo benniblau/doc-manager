@@ -8,7 +8,7 @@ Python CLI that organises PDF documents using a local LLM. A LangGraph pipeline 
 
 ```bash
 # Run with venv
-venv/bin/python3 main.py <folder> [--dry-run] [--copy] [--verbose] [--recursive]
+venv/bin/python3 main.py <folder> --output <dest> [--dry-run] [--verbose] [--recursive]
 
 # Install deps
 venv/bin/pip install -e .
@@ -46,7 +46,7 @@ scanner → orchestrator ──Send×N──► analyst_sub (parallel) → colle
 | `doc_manager/agents/collector.py` | — | Merges `analysed_docs` (accumulated from all sub-agents) back into `documents`; sorts by `file_path` to restore deterministic order |
 | `doc_manager/agents/taxonomy.py` | — | Deterministic `sender/type` rule; no LLM call |
 | `doc_manager/agents/writer.py` | — | Template rendering only; writes to a `tempfile.mkdtemp` dir |
-| `doc_manager/agents/organizer.py` | — | Moves/copies files; in dry-run prints rich table instead |
+| `doc_manager/agents/organizer.py` | — | Copies files to explicitly provided output folder (source never modified); renames to `<Date>_<Type>_<Sender>` — falls back to original filename if any field is missing; in dry-run prints rich table instead |
 
 ### LLM client
 
@@ -66,6 +66,9 @@ The OpenAI SDK is used against a local vLLM server. Key details:
 - **`enable_thinking` hangs the server** — only `chat_template_kwargs: {enable_thinking: bool}` works on this vLLM instance
 - **pdfplumber over pymupdf** — better extraction from German financial docs with mixed table/text layouts
 - **OCR fallback via ocrmypdf** — if pdfplumber extracts no text, `tools/pdf_reader.py` shells out to `ocrmypdf` (`--deskew --clean --language deu+eng`) and re-extracts from the resulting PDF; gracefully skipped if `ocrmypdf` is not installed; exit code 6 (already has text layer) is treated as success
+- **Output folder is required** — `--output <dest>` must be explicitly provided; there is no default; source folder is never modified
+- **Files are always copied, never moved** — the `--copy` flag no longer exists; the organizer always copies so the source remains intact
+- **Filename template `<Date>_<Type>_<Sender>`** — the organizer renames both the PDF and its markdown sidecar using sanitized metadata; if any of the three fields is missing the original filename is kept unchanged; collision handling appends the original stem then a numeric counter
 - **Taxonomy is deterministic** — it was intentionally simplified from an LLM-based proposal to a fixed `sender/type` rule for predictability
 - **Writer uses tempfile** — markdown files are written to a temp dir; the Organizer copies them to their final destination alongside the PDFs
 
