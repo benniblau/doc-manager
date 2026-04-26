@@ -8,6 +8,7 @@ from doc_manager.agents.collector import collector_node
 from doc_manager.agents.taxonomy import taxonomy_node
 from doc_manager.agents.writer import writer_node
 from doc_manager.agents.organizer import organizer_node
+from doc_manager.agents.summarizer import summarizer_node
 
 
 def build_graph():
@@ -20,6 +21,7 @@ def build_graph():
     g.add_node("taxonomy",     taxonomy_node)
     g.add_node("writer",       writer_node)
     g.add_node("organizer",    organizer_node)
+    g.add_node("summarizer",   summarizer_node)
 
     g.set_entry_point("scanner")
     g.add_edge("scanner",      "orchestrator")
@@ -28,6 +30,7 @@ def build_graph():
     g.add_edge("collector",    "taxonomy")
     g.add_edge("taxonomy",     "writer")
     g.add_edge("writer",       "organizer")
-    g.add_edge("organizer",    END)
+    g.add_edge("organizer",    "summarizer")
+    g.add_edge("summarizer",   END)
 
     return g.compile()

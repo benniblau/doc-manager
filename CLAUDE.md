@@ -33,7 +33,7 @@ apt install ocrmypdf           # Debian/Ubuntu
 ### Pipeline
 
 ```
-scanner → orchestrator ──Send×N──► analyst_sub (parallel) → collector → taxonomy → writer → organizer
+scanner → orchestrator ──Send×N──► analyst_sub (parallel) → collector → taxonomy → writer → organizer → summarizer
 ```
 
 ### Agent responsibilities
@@ -47,6 +47,7 @@ scanner → orchestrator ──Send×N──► analyst_sub (parallel) → colle
 | `doc_manager/agents/taxonomy.py` | — | Deterministic `sender/type` rule; no LLM call |
 | `doc_manager/agents/writer.py` | — | Template rendering only; writes to a `tempfile.mkdtemp` dir |
 | `doc_manager/agents/organizer.py` | — | Copies files to explicitly provided output folder (source never modified); renames to `<Date>_<Type>_<Sender>` — falls back to original filename if any field is missing; in dry-run prints rich table instead |
+| `doc_manager/agents/summarizer.py` | ✓ | One LLM call per unique subfolder; writes `SUMMARY.md` into each destination folder describing the project, key findings, timeline, and financials; system prompt loaded from `agents/summarizer.md` |
 
 ### LLM client
 
@@ -65,7 +66,7 @@ The OpenAI SDK is used against a local vLLM server. Key details:
 - **No `operator.add` on `documents`** — each outer node returns the full updated list; use `analysed_docs` (which does use `operator.add`) as the accumulator for parallel sub-agent results, then move them into `documents` in the collector
 - **`enable_thinking` hangs the server** — only `chat_template_kwargs: {enable_thinking: bool}` works on this vLLM instance
 - **pdfplumber over pymupdf** — better extraction from German financial docs with mixed table/text layouts
-- **OCR fallback via ocrmypdf** — if pdfplumber extracts no text, `tools/pdf_reader.py` shells out to `ocrmypdf` (`--deskew --clean --language deu+eng`) and re-extracts from the resulting PDF; gracefully skipped if `ocrmypdf` is not installed; exit code 6 (already has text layer) is treated as success
+- **Three-stage text extraction chain** — `tools/pdf_reader.py` tries in order: (1) pdfplumber for embedded text, (2) ocrmypdf Tesseract OCR (`--deskew --clean --oversample 400 --tesseract-pagesegmode 6`), (3) vision LLM via `VISION_MODEL_URL` if set; each stage is skipped gracefully if its dependency is missing; ocrmypdf exit code 6 is treated as success
 - **Output folder is required** — `--output <dest>` must be explicitly provided; there is no default; source folder is never modified
 - **Files are always copied, never moved** — the `--copy` flag no longer exists; the organizer always copies so the source remains intact
 - **Filename template `<Date>_<Type>_<Sender>`** — the organizer renames both the PDF and its markdown sidecar using sanitized metadata; if any of the three fields is missing the original filename is kept unchanged; collision handling appends the original stem then a numeric counter
@@ -79,4 +80,8 @@ MODEL_URL=http://localhost:8000/    # local vLLM server, /v1 appended automatica
 MODEL_NAME=your-model-name
 ENABLE_THINKING=false               # true = slower but more thorough reasoning
 MAX_AGENTS=4                        # parallel analyst sub-agents and scanner threads; tune to vLLM concurrency capacity
+
+# Optional vision fallback for scanned PDFs (Ollama recommended)
+VISION_MODEL_URL=http://localhost:11434
+VISION_MODEL_NAME=qwen2.5vl:3b
 ```
