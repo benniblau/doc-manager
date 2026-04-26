@@ -16,7 +16,6 @@ env/
 
 # Environment — never commit secrets
 .env
-.env.*
 
 # Temporary files written by the pipeline
 /tmp/
