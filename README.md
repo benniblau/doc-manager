@@ -56,9 +56,9 @@ All settings live in `.env`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `MODEL_URL` | — | Base URL of your LLM server, e.g. `http://10.10.1.180:8888/` |
-| `MODEL_NAME` | `Qwen3.6` | Model name as registered on the server |
-| `ENABLE_THINKING` | `false` | Set `true` to enable Qwen3 extended thinking (slower, more accurate) |
+| `MODEL_URL` | — | Base URL of your LLM server, e.g. `http://localhost:8000/` |
+| `MODEL_NAME` | — | Model name as registered on the server |
+| `ENABLE_THINKING` | `false` | Set `true` to enable extended thinking mode if supported (slower, more accurate) |
 | `MAX_TEXT_CHARS` | `32000` | Max characters of PDF text sent to the LLM (~8k tokens) |
 | `TEMPERATURE` | `0.1` | LLM sampling temperature |
 | `REQUEST_TIMEOUT` | `120` | Per-request timeout in seconds |

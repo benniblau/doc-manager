@@ -55,7 +55,7 @@ The OpenAI SDK is used against a local vLLM server. Key details:
 ## Environment
 
 ```
-MODEL_URL=http://10.10.1.180:8888/    # local vLLM server, /v1 appended automatically
-MODEL_NAME=Qwen3.6
-ENABLE_THINKING=false                  # true = slower but more thorough reasoning
+MODEL_URL=http://localhost:8000/    # local vLLM server, /v1 appended automatically
+MODEL_NAME=your-model-name
+ENABLE_THINKING=false               # true = slower but more thorough reasoning
 ```
